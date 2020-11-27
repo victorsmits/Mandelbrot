@@ -1,11 +1,11 @@
-let WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM
-const MAX_ITERATION = 2500
+let WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM, DIV, MODE
+let MAX_ITERATION
 const BASE_URL = "http://localhost:4000"
 
 onmessage = (e) => {
    const {isSettingUp} = e.data
    if (isSettingUp) {
-      const {w, h, realSet, imaginarySet} = e.data
+      const {w, h, realSet, imaginarySet, div, mode, iteration} = e.data
 
       REAL_SET = {start: realSet.start, end: realSet.end}
       IMAGINARY_SET = {start: imaginarySet.start, end: imaginarySet.end}
@@ -15,36 +15,52 @@ onmessage = (e) => {
 
       WIDTH = w
       HEIGHT = h
+      DIV = div
+      MODE = mode
+      MAX_ITERATION = iteration
    } else {
-      const {col} = e.data
-      const mandelbrotSets = []
-
-      // calculateServer(col, mandelbrotSets).then(man => postMessage({col, man}))
-
-      for (let row = 0; row < HEIGHT; row++) {
-         mandelbrotSets[row] = calculate(col, row)
+      const {d} = e.data
+      switch (MODE) {
+         case "SINGLE":
+            single(d)
+            break
+         case "MULTI":
+            multi(d)
+            break
       }
-      postMessage({col, mandelbrotSets})
    }
 }
+
 const calculate = (i, j) => {
    return mandelbrot(relativePoint(i, j))
 }
 
-async function calculateServer(j) {
-   return new Promise(resolve => {
+const multi = (d) => {
+   const mandelbrotSets = [[]]
+
+   const start = (((1 / DIV) * d) * WIDTH)
+   const end = ((1 / DIV) * (d + 1)) * WIDTH
+
+   for (let col = start; col < end; col++) {
       let man = []
       for (let row = 0; row < HEIGHT; row++) {
-         post('/generate', relativePoint(row, j))
-            .then(res => {
-               res.json()
-                  .then((data) =>
-                     man[row] = data.result
-                  )
-            })
+         man[row] = calculate(col, row)
       }
-      resolve(man)
-   })
+      mandelbrotSets[col] = man
+   }
+   postMessage({d, mandelbrotSets})
+}
+
+single = (col) => {
+   const mandelbrotSets = []
+   for (let row = 0; row < HEIGHT; row++) {
+      mandelbrotSets[row] = calculate(col, row)
+   }
+   postMessage({col, mandelbrotSets})
+}
+
+function calculateServer(j) {
+   return post('/generate', {x: j, y: HEIGHT})
 }
 
 const relativePoint = (x, y) => {
@@ -76,7 +92,16 @@ const post = (path, params, method = 'post') => {
    return fetch(`${BASE_URL}${path}`,
       {
          method: 'POST',
-         body: JSON.stringify({point: params}),
+         body: JSON.stringify({
+            ...params,
+            REAL_SET: REAL_SET,
+            IMAGINARY_SET: IMAGINARY_SET,
+            WIDTH: WIDTH,
+            HEIGHT: HEIGHT,
+            END_START_RL: END_START_RL,
+            END_START_IM: END_START_IM,
+            MAX_ITERATION: MAX_ITERATION
+         }),
          headers: {
             'Content-Type': 'application/json'
          }

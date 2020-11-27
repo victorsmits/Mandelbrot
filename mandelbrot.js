@@ -1,8 +1,18 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
+const iteration_input = $('#iteration')
+const division_input = $('#division')
+const scale_input = $('#scale')
 
+const timer = new Timer();
 const WIDTH = 1000
 const HEIGHT = 800
+let DIV = 4
+let ZOOM_FACTOR = 0.1
+let STATUS = 0
+let MODE = "SINGLE"
+let MODE_COLOR = "BW"
+let MAX_ITERATION = 2500
 ctx.canvas.width = WIDTH
 ctx.canvas.height = HEIGHT
 
@@ -10,7 +20,7 @@ let worker
 let colorPalette = []
 let REAL_SET = {start: -2, end: 1}
 let IMAGINARY_SET = {start: -1, end: 1}
-const ZOOM_FACTOR = 0.1
+
 const TASKS = []
 
 const lagrange = ([X1, Y1], [X2, Y2], x) => (((Y1 * (x - X2)) / (X1 - X2)) + ((Y2 * (x - X1)) / (X2 - X1)))
@@ -52,41 +62,119 @@ const paletteBW = () => new Array(250).fill(0).map((_, i) => {
    return [c, c, c]
 })
 
-const startWorker = () => {
-   for (let col = 0; col < WIDTH; col++) TASKS[col] = col
-   worker.postMessage({col: TASKS.shift()})
+const startSingle = () => {
+   for (let col = 0; col < WIDTH; col++) {
+      TASKS[col] = col
+   }
+   worker.postMessage({d: TASKS.shift()})
 }
 
-const draw = (res) => {
-   if (TASKS.length > 0)
-      worker.postMessage({col: TASKS.shift()})
+const startWorker = () => {
+   for (let d = 0; d < DIV; d++) {
+      worker.postMessage({d: d})
+   }
+}
 
-   const {col, mandelbrotSets} = res.data
+const singleDraw = (col, mandelbrotSets) => {
    for (let i = 0; i < HEIGHT; i++) {
       const [m, isMandelbrotSet] = mandelbrotSets[i]
       let c = isMandelbrotSet ? [0, 0, 0] : colorPalette[m % (colorPalette.length - 1)]
       ctx.fillStyle = `rgb(${c[0]}, ${c[1]}, ${c[2]})`
       ctx.fillRect(col, i, 1, 1)
    }
+   if (TASKS.length === 0)
+      timer.stop()
+}
+
+const multiDraw = (d, mandelbrotSets) => {
+   const start = (((1 / DIV) * d) * WIDTH)
+   const end = ((1 / DIV) * (d + 1)) * WIDTH
+
+   for (let col = start; col < end; col++) {
+      for (let i = 0; i < HEIGHT; i++) {
+         const [m, isMandelbrotSet] = mandelbrotSets[col][i]
+         let c = isMandelbrotSet ? [0, 0, 0] : colorPalette[m % (colorPalette.length - 1)]
+         ctx.fillStyle = `rgb(${c[0]}, ${c[1]}, ${c[2]})`
+         ctx.fillRect(col, i, 1, 1)
+      }
+   }
+   if (STATUS === DIV - 1) {
+      console.log("END")
+      timer.stop()
+   } else {
+      STATUS++
+   }
+}
+
+const draw = (res) => {
+   if (TASKS.length > 0)
+      worker.postMessage({d: TASKS.shift()})
+
+   const {mandelbrotSets} = res.data
+   switch (MODE) {
+      case "SINGLE":
+         singleDraw(res.data.col, mandelbrotSets)
+         break
+      case "MULTI":
+         multiDraw(res.data.d, mandelbrotSets)
+         break
+   }
 }
 
 const init = () => {
+   STATUS = 0
+   timer.stop()
+   timer.start(['second'])
    if (worker) worker.terminate()
-   worker = new Worker('worker.js')
-   worker.postMessage({w: WIDTH, h: HEIGHT, realSet: REAL_SET, imaginarySet: IMAGINARY_SET, isSettingUp: true})
-   startWorker()
-   colorPalette = paletteBW()
+   worker = new Worker('./worker.js')
+   worker.postMessage({
+      w: WIDTH,
+      h: HEIGHT,
+      div: DIV,
+      realSet: REAL_SET,
+      imaginarySet: IMAGINARY_SET,
+      isSettingUp: true,
+      mode: MODE,
+      iteration: MAX_ITERATION
+   })
+   console.log(MODE)
+   switch (MODE) {
+      case "SINGLE":
+         startSingle()
+         break
+      case "MULTI":
+         startWorker()
+         break
+   }
+   switch (MODE_COLOR) {
+      case "BW":
+         colorPalette = paletteBW()
+         break
+      case "RGB":
+         colorPalette = palette()
+         break
+   }
    worker.onmessage = draw
 }
 
 const getRelativePoint = (pixel, length, set) => set.start + (pixel / length) * (set.end - set.start)
 
+const updateMode = (value) => {
+   MODE = value
+   reset()
+}
 
-canvas.addEventListener('click', e => {
-   zoom(e)
-})
+const reset = () => {
+   ctx.clearRect(0, 0, canvas.width, canvas.height);
+   init()
+}
 
-zoom = (e, scale = ZOOM_FACTOR) => {
+const updateColor = (value) => {
+   MODE_COLOR = value
+   init()
+}
+
+const zoom = (e, scale = ZOOM_FACTOR) => {
    const zfw = (WIDTH * scale)
    const zfh = (HEIGHT * scale)
 
@@ -101,5 +189,37 @@ zoom = (e, scale = ZOOM_FACTOR) => {
 
    init()
 }
+
+iteration_input.val(MAX_ITERATION)
+
+iteration_input.change(e => {
+   console.log(e.target.value)
+   MAX_ITERATION = e.target.value
+   reset()
+})
+
+division_input.val(DIV)
+
+division_input.change(e => {
+   console.log(e.target.value)
+   DIV = e.target.value
+   reset()
+})
+
+scale_input.val(ZOOM_FACTOR)
+
+scale_input.change(e => {
+   console.log(e.target.value)
+   ZOOM_FACTOR = e.target.value
+   reset()
+})
+
+canvas.addEventListener('click', e => {
+   zoom(e)
+})
+
+timer.addEventListener('secondsUpdated', function (e) {
+   $('#basicUsage').html(timer.getTimeValues().toString());
+});
 
 init()

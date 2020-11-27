@@ -1,12 +1,12 @@
-var express = require('express');
-var router = express.Router();
+let express = require('express');
+let router = express.Router();
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
    res.render('index', {title: 'Express'});
 });
 
-const mandelbrot = (c) => {
+const mandelbrot = (c, MAX_ITERATION) => {
    let z = {x: 0, y: 0}, n = 0, p, d;
    do {
       p = {
@@ -25,8 +25,15 @@ const mandelbrot = (c) => {
 }
 
 router.post('/generate', (req, res, next) => {
-   console.log(req.body)
-   res.status(200).json({result: mandelbrot(req.body.point)})
+   let {WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM, MAX_ITERATION, x, y} = req.body
+   let man = []
+   for (let row = 0; row < HEIGHT; row++) {
+      x = REAL_SET.start + (x / WIDTH) * (END_START_RL)
+      y = IMAGINARY_SET.start + (y / HEIGHT) * (END_START_IM)
+
+      man[row] = mandelbrot({x, y}, MAX_ITERATION)
+   }
+   res.status(200).json(man)
 });
 
 
