@@ -5,19 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.1/src/easytimer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <title>Mandelbrot Set</title>
 </head>
 
 <body>
-<div>
-
-</div>
-
-
 <form>
-    <i>Time to generate: <div id="basicUsage">00:00:00</div></i><br>
+    <i>Time to generate:
+        <div id="basicUsage">00:00:00</div>
+    </i><br>
     <i>Click where you want to zoom</i><br><br>
     <label for="MODE">MODE SELECTION</label>
     <select name="MODE" id="MODE" onchange="updateMode(value)">

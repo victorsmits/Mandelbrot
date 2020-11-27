@@ -10,5 +10,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="easytimer" level="application" />
     <orderEntry type="library" name="jquery" level="application" />
+    <orderEntry type="library" name="timer-js" level="application" />
+    <orderEntry type="library" name="moment" level="application" />
   </component>
 </module>

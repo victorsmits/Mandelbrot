@@ -4,7 +4,8 @@ const iteration_input = $('#iteration')
 const division_input = $('#division')
 const scale_input = $('#scale')
 
-const timer = new Timer();
+let time = moment().startOf('hour').startOf('day')
+let timer
 const WIDTH = 1000
 const HEIGHT = 800
 let DIV = 4
@@ -83,7 +84,7 @@ const singleDraw = (col, mandelbrotSets) => {
       ctx.fillRect(col, i, 1, 1)
    }
    if (TASKS.length === 0)
-      timer.stop()
+      stop()
 }
 
 const multiDraw = (d, mandelbrotSets) => {
@@ -100,7 +101,7 @@ const multiDraw = (d, mandelbrotSets) => {
    }
    if (STATUS === DIV - 1) {
       console.log("END")
-      timer.stop()
+      stop()
    } else {
       STATUS++
    }
@@ -123,8 +124,7 @@ const draw = (res) => {
 
 const init = () => {
    STATUS = 0
-   timer.stop()
-   timer.start(['second'])
+   restart()
    if (worker) worker.terminate()
    worker = new Worker('./worker.js')
    worker.postMessage({
@@ -170,6 +170,7 @@ const reset = () => {
 }
 
 const updateColor = (value) => {
+
    MODE_COLOR = value
    init()
 }
@@ -189,6 +190,25 @@ const zoom = (e, scale = ZOOM_FACTOR) => {
 
    init()
 }
+
+const start = () => {
+   $('#basicUsage').html(time.format('HH:mm:ss'));
+   timer = setInterval(() => {
+      time.add(1, 'second')
+      $('#basicUsage').html(time.format('HH:mm:ss'));
+   }, 1000)
+}
+
+const stop = () => {
+   clearInterval(timer)
+}
+
+const restart = () => {
+   stop()
+   time = moment().startOf('hour').startOf('day')
+   start()
+}
+
 
 iteration_input.val(MAX_ITERATION)
 
@@ -217,9 +237,5 @@ scale_input.change(e => {
 canvas.addEventListener('click', e => {
    zoom(e)
 })
-
-timer.addEventListener('secondsUpdated', function (e) {
-   $('#basicUsage').html(timer.getTimeValues().toString());
-});
 
 init()
