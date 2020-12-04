@@ -20,8 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b39f8982-7a59-4f12-b49d-bf01a16060d0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.drone.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.drone.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +129,7 @@
       <workItem from="1606404335695" duration="1836000" />
       <workItem from="1606414338182" duration="200000" />
       <workItem from="1606495849357" duration="19000" />
-      <workItem from="1607070317559" duration="4249000" />
+      <workItem from="1607070317559" duration="4623000" />
     </task>
     <servers />
   </component>

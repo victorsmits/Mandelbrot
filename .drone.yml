@@ -4,7 +4,7 @@ name: default
 
 trigger:
   branch:
-    - main
+    - master
   event:
     - push
 
