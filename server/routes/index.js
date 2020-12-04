@@ -36,5 +36,4 @@ router.post('/generate', (req, res, next) => {
    res.status(200).json(man)
 });
 
-
 module.exports = router;

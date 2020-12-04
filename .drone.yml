@@ -1,0 +1,38 @@
+kind: pipeline
+type: docker
+name: default
+
+trigger:
+  branch:
+    - main
+  event:
+    - push
+
+steps:
+  - name: install
+    image: node:alpine
+    commands:
+      - npm install
+
+  - name: build
+    image: plugins/docker
+    settings:
+      username: victorsmits
+      password: Smivic1997
+      repo: victorsmits/mandelbrot-server
+      tags: latest
+      cache_from: victorsmits/mandelbrot-server
+
+  - name: deploy
+    image: appleboy/drone-ssh
+    settings:
+      host: 188.165.253.204
+      port: 22
+      username:
+        from_secret: ssh_username
+      password:
+        from_secret: ssh_password
+      script:
+        - cd docker/
+        - docker-compose pull mandelbrot-server
+        - docker-compose up -d mandelbrot-server
