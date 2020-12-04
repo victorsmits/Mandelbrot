@@ -3,26 +3,29 @@ const ctx = canvas.getContext('2d')
 const iteration_input = $('#iteration')
 const division_input = $('#division')
 const scale_input = $('#scale')
+const BASE_URL = "http://localhost:4000"
+const TASKS = []
+const WIDTH = 1000
+const HEIGHT = 800
+
+ctx.canvas.width = WIDTH
+ctx.canvas.height = HEIGHT
 
 let time = moment().startOf('hour').startOf('day')
 let timer
-const WIDTH = 1000
-const HEIGHT = 800
 let DIV = 4
 let ZOOM_FACTOR = 0.1
 let STATUS = 0
 let MODE = "SINGLE"
 let MODE_COLOR = "BW"
 let MAX_ITERATION = 2500
-ctx.canvas.width = WIDTH
-ctx.canvas.height = HEIGHT
-
 let worker
 let colorPalette = []
 let REAL_SET = {start: -2, end: 1}
 let IMAGINARY_SET = {start: -1, end: 1}
 
-const TASKS = []
+
+// COLOR PALETTE
 
 const lagrange = ([X1, Y1], [X2, Y2], x) => (((Y1 * (x - X2)) / (X1 - X2)) + ((Y2 * (x - X1)) / (X2 - X1)))
 
@@ -63,17 +66,15 @@ const paletteBW = () => new Array(250).fill(0).map((_, i) => {
    return [c, c, c]
 })
 
+
+// SINGLE CORE
+
 const startSingle = () => {
+   initWorker()
    for (let col = 0; col < WIDTH; col++) {
       TASKS[col] = col
    }
    worker.postMessage({d: TASKS.shift()})
-}
-
-const startWorker = () => {
-   for (let d = 0; d < DIV; d++) {
-      worker.postMessage({d: d})
-   }
 }
 
 const singleDraw = (col, mandelbrotSets) => {
@@ -85,6 +86,55 @@ const singleDraw = (col, mandelbrotSets) => {
    }
    if (TASKS.length === 0)
       stop()
+}
+
+
+// SERVER
+
+const startServer = () => {
+   for (let col = 0; col < WIDTH; col++) {
+      calculateServer(col)
+         .then(res => {
+            res.json()
+               .then(mandelbrotSets => {
+                  draw({data: {col, mandelbrotSets}})
+               })
+         })
+   }
+}
+
+function calculateServer(j) {
+   return post('/generate', {col: j})
+}
+
+const post = (path, params) => {
+   return fetch(`${BASE_URL}${path}`,
+      {
+         method: 'POST',
+         body: JSON.stringify({
+            ...params,
+            REAL_SET: REAL_SET,
+            IMAGINARY_SET: IMAGINARY_SET,
+            WIDTH: WIDTH,
+            HEIGHT: HEIGHT,
+            END_START_RL: (REAL_SET.end - REAL_SET.start),
+            END_START_IM: (IMAGINARY_SET.end - IMAGINARY_SET.start),
+            MAX_ITERATION: MAX_ITERATION
+         }),
+         headers: {
+            'Content-Type': 'application/json'
+         }
+      })
+}
+
+
+// MULTI CORE
+
+const startWorker = () => {
+   initWorker()
+   for (let d = 0; d < DIV; d++) {
+      worker.postMessage({d: d})
+   }
 }
 
 const multiDraw = (d, mandelbrotSets) => {
@@ -107,6 +157,9 @@ const multiDraw = (d, mandelbrotSets) => {
    }
 }
 
+
+// MAIN
+
 const draw = (res) => {
    if (TASKS.length > 0)
       worker.postMessage({d: TASKS.shift()})
@@ -116,15 +169,16 @@ const draw = (res) => {
       case "SINGLE":
          singleDraw(res.data.col, mandelbrotSets)
          break
+      case "SERVER":
+         singleDraw(res.data.col, mandelbrotSets)
+         break
       case "MULTI":
          multiDraw(res.data.d, mandelbrotSets)
          break
    }
 }
 
-const init = () => {
-   STATUS = 0
-   restart()
+const initWorker = () =>{
    if (worker) worker.terminate()
    worker = new Worker('./worker.js')
    worker.postMessage({
@@ -137,10 +191,18 @@ const init = () => {
       mode: MODE,
       iteration: MAX_ITERATION
    })
+}
+
+const init = () => {
+   STATUS = 0
+   restart()
    console.log(MODE)
    switch (MODE) {
       case "SINGLE":
          startSingle()
+         break
+      case "SERVER":
+         startServer()
          break
       case "MULTI":
          startWorker()
@@ -170,7 +232,6 @@ const reset = () => {
 }
 
 const updateColor = (value) => {
-
    MODE_COLOR = value
    init()
 }
@@ -191,6 +252,9 @@ const zoom = (e, scale = ZOOM_FACTOR) => {
    init()
 }
 
+
+// TIMER
+
 const start = () => {
    $('#basicUsage').html(time.format('HH:mm:ss'));
    timer = setInterval(() => {
@@ -209,6 +273,8 @@ const restart = () => {
    start()
 }
 
+
+// START
 
 iteration_input.val(MAX_ITERATION)
 

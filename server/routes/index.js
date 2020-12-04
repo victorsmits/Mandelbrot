@@ -25,11 +25,11 @@ const mandelbrot = (c, MAX_ITERATION) => {
 }
 
 router.post('/generate', (req, res, next) => {
-   let {WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM, MAX_ITERATION, x, y} = req.body
+   let {WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM, MAX_ITERATION, col} = req.body
    let man = []
    for (let row = 0; row < HEIGHT; row++) {
-      x = REAL_SET.start + (x / WIDTH) * (END_START_RL)
-      y = IMAGINARY_SET.start + (y / HEIGHT) * (END_START_IM)
+      let x = REAL_SET.start + (col / WIDTH) * (END_START_RL)
+      let y = IMAGINARY_SET.start + (row / HEIGHT) * (END_START_IM)
 
       man[row] = mandelbrot({x, y}, MAX_ITERATION)
    }

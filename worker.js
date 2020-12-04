@@ -1,6 +1,5 @@
 let WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET, END_START_RL, END_START_IM, DIV, MODE
 let MAX_ITERATION
-const BASE_URL = "http://localhost:4000"
 
 onmessage = (e) => {
    const {isSettingUp} = e.data
@@ -18,6 +17,10 @@ onmessage = (e) => {
       DIV = div
       MODE = mode
       MAX_ITERATION = iteration
+      console.log({
+         WIDTH, HEIGHT, REAL_SET, IMAGINARY_SET,
+         END_START_RL, END_START_IM, DIV, MODE
+      })
    } else {
       const {d} = e.data
       switch (MODE) {
@@ -59,13 +62,9 @@ single = (col) => {
    postMessage({col, mandelbrotSets})
 }
 
-function calculateServer(j) {
-   return post('/generate', {x: j, y: HEIGHT})
-}
-
 const relativePoint = (x, y) => {
-   x = REAL_SET.start + (x / WIDTH) * (END_START_RL)
-   y = IMAGINARY_SET.start + (y / HEIGHT) * (END_START_IM)
+   x = REAL_SET.start + (x / WIDTH) * (END_START_RL) // relative col
+   y = IMAGINARY_SET.start + (y / HEIGHT) * (END_START_IM) //relative row
 
    return {x, y}
 }
@@ -88,22 +87,4 @@ const mandelbrot = (c) => {
    return [n, d <= 2]
 }
 
-const post = (path, params, method = 'post') => {
-   return fetch(`${BASE_URL}${path}`,
-      {
-         method: 'POST',
-         body: JSON.stringify({
-            ...params,
-            REAL_SET: REAL_SET,
-            IMAGINARY_SET: IMAGINARY_SET,
-            WIDTH: WIDTH,
-            HEIGHT: HEIGHT,
-            END_START_RL: END_START_RL,
-            END_START_IM: END_START_IM,
-            MAX_ITERATION: MAX_ITERATION
-         }),
-         headers: {
-            'Content-Type': 'application/json'
-         }
-      })
-}
+
