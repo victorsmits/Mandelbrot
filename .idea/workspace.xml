@@ -19,9 +19,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b39f8982-7a59-4f12-b49d-bf01a16060d0" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.drone.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.drone.yml" afterDir="false" />
-    </list>
+    <list default="true" id="b39f8982-7a59-4f12-b49d-bf01a16060d0" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -132,7 +130,7 @@
       <workItem from="1606404335695" duration="1836000" />
       <workItem from="1606414338182" duration="200000" />
       <workItem from="1606495849357" duration="19000" />
-      <workItem from="1607070317559" duration="4623000" />
+      <workItem from="1607070317559" duration="4926000" />
     </task>
     <servers />
   </component>
